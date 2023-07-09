@@ -10,7 +10,7 @@ on:
 env:
 
     # Define environment variables
-    ACTION: "destroy"
+    ACTION: "apply"
     S3_VERSION: "Enabled"
     AWS_REGION: "us-east-1"
     S3_DATABASE_STORAGE: "database"
@@ -49,7 +49,7 @@ jobs:
                   source  = "hashicorp/aws"
                   version = "~> 4.0"
                 }
-              } 
+              }
               backend "s3" {
                 dynamodb_table = "${{ env.TERRAFORM_BACKEND_STATE_FILE_LOCK_DYANAMODB_TABLE }}"
                 bucket         = "${{ env.TERRAFORM_BACKEND_S3_BUCKET_NAME }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID }}"
@@ -77,7 +77,7 @@ jobs:
               echo "Start Creating s3 bucket: ${{ env.TERRAFORM_BACKEND_S3_BUCKET_NAME }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID}}"
               aws s3api create-bucket \
               --bucket "${{ env.TERRAFORM_BACKEND_S3_BUCKET_NAME }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID}}"
-            
+
               # Enabling s3 version
               aws s3api put-bucket-versioning \
               --bucket "${{ env.TERRAFORM_BACKEND_S3_BUCKET_NAME }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID}}" \
@@ -109,19 +109,19 @@ jobs:
             terraform -chdir=setup/terraform1 init
             terraform -chdir=setup/terraform1 fmt
             terraform -chdir=setup/terraform1 validate
-      
+
             terraform -chdir=setup/terraform1 plan \
             -var='secrets={ "password" = "'${{ secrets.MY_GITHUB_TOKEN }}'", "username" = "'${{ secrets.MY_GITHUB_USERNAME }}'", "name" = "'${{ env.SECRETS_NAME }}'" }' \
             -var='repository-details={ "repo-name" = "'${{ env.REPOSITORY_NAME }}'", "repo-url" = "'${{ env.REPOSITORY_URL }}'" }' \
             -var="s3-version=${{ env.S3_VERSION }}" \
             -var="s3-storage=[\"${{ env.S3_DATABASE_STORAGE }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID }}\", \"${{ env.S3_DATALAKE_STORAGE }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID }}\", \"${{ env.S3_DATAWAREHOUSE_STORAGE }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID }}\"]"
-      
+
             terraform -chdir=setup/terraform1 apply -auto-approve -lock=false \
             -var='secrets={ "password" = "'${{ secrets.MY_GITHUB_TOKEN }}'", "username" = "'${{ secrets.MY_GITHUB_USERNAME }}'", "name" = "'${{ env.SECRETS_NAME }}'" }' \
             -var='repository-details={ "repo-name" = "'${{ env.REPOSITORY_NAME }}'", "repo-url" = "'${{ env.REPOSITORY_URL }}'" }' \
             -var="s3-version=${{ env.S3_VERSION }}" \
             -var="s3-storage=[\"${{ env.S3_DATABASE_STORAGE }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID }}\", \"${{ env.S3_DATALAKE_STORAGE }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID }}\", \"${{ env.S3_DATAWAREHOUSE_STORAGE }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID }}\"]"
-      
+
             echo "Infrastructure deployed successfully."
 
         - id: "TerraformDestroy"
@@ -131,21 +131,21 @@ jobs:
             terraform -chdir=setup/terraform1 init
             terraform -chdir=setup/terraform1 fmt
             terraform -chdir=setup/terraform1 validate
-      
+
             terraform -chdir=setup/terraform1 plan \
             -var='secrets={ "password" = "'${{ secrets.MY_GITHUB_TOKEN }}'", "username" = "'${{ secrets.MY_GITHUB_USERNAME }}'", "name" = "'${{ env.SECRETS_NAME }}'" }' \
             -var='repository-details={ "repo-name" = "'${{ env.REPOSITORY_NAME }}'", "repo-url" = "'${{ env.REPOSITORY_URL }}'" }' \
             -var="s3-version=${{ env.S3_VERSION }}" \
             -var="s3-storage=[\"${{ env.S3_DATABASE_STORAGE }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID }}\", \"${{ env.S3_DATALAKE_STORAGE }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID }}\", \"${{ env.S3_DATAWAREHOUSE_STORAGE }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID }}\"]"
-      
+
             terraform -chdir=setup/terraform1 destroy -auto-approve -lock=false \
             -var='secrets={ "password" = "'${{ secrets.MY_GITHUB_TOKEN }}'", "username" = "'${{ secrets.MY_GITHUB_USERNAME }}'", "name" = "'${{ env.SECRETS_NAME }}'" }' \
             -var='repository-details={ "repo-name" = "'${{ env.REPOSITORY_NAME }}'", "repo-url" = "'${{ env.REPOSITORY_URL }}'" }' \
             -var="s3-version=${{ env.S3_VERSION }}" \
             -var="s3-storage=[\"${{ env.S3_DATABASE_STORAGE }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID }}\", \"${{ env.S3_DATALAKE_STORAGE }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID }}\", \"${{ env.S3_DATAWAREHOUSE_STORAGE }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID }}\"]"
-      
+
             echo "Infrastructure destroyed successfully."
-  
+
         - id: "DeleteDynamoDB"
           if: env.ACTION == 'destroy'
           name: Destroy Dynamodb Table for state locking
@@ -166,10 +166,10 @@ jobs:
               for version in $versions; do
                 aws s3api delete-object --bucket "${{ env.TERRAFORM_BACKEND_S3_BUCKET_NAME }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID}}" --key "$key" --version-id "$version"
               done
-            done  
+            done
             aws s3 rb s3://"${{ env.TERRAFORM_BACKEND_S3_BUCKET_NAME }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID}}" --force
             echo "Finished Deleting s3 bucket"
-          
+
     setupPR:
       if: github.event_name == 'pull_request' && github.base_ref == 'setup'
       runs-on: ubuntu-latest
@@ -189,7 +189,7 @@ jobs:
                 source  = "hashicorp/aws"
                 version = "~> 4.0"
               }
-            } 
+            }
             backend "s3" {
               dynamodb_table = "${{ env.TERRAFORM_BACKEND_STATE_FILE_LOCK_DYANAMODB_TABLE }}"
               bucket         = "${{ env.TERRAFORM_BACKEND_S3_BUCKET_NAME }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID }}"
@@ -216,7 +216,7 @@ jobs:
             echo "Start Creating s3 bucket: ${{ env.TERRAFORM_BACKEND_S3_BUCKET_NAME }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID}}"
             aws s3api create-bucket \
             --bucket "${{ env.TERRAFORM_BACKEND_S3_BUCKET_NAME }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID}}"
-            
+
             # Enabling s3 version
             aws s3api put-bucket-versioning \
             --bucket "${{ env.TERRAFORM_BACKEND_S3_BUCKET_NAME }}-${{ env.AWS_REGION }}-${{ secrets.YOUR_AWS_ACCOUNT_ID}}" \
