@@ -7,7 +7,7 @@ sagemaker-notebook = {
 }
 
 tags = {
-  "deployed by" = "Kwao Jedidiah
+  "deployed by" = "Kwao Jedidiah"
   "role"        = "DevOps Engineer"
   "Email"       = "jedidiahkwao@gmail.com"
   "purpose"     = "To setup infrastructure for data science and machine learning teams"
